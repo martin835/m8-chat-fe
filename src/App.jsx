@@ -9,7 +9,7 @@ import ChatWindow from "./components/ChatWindow";
 const ADDRESS = process.env.REACT_APP_BE_ADDRESS || "http://localhost:3030";
 const socket = io(ADDRESS, {
   transports: ["websocket"],
-  auth: { token: "myjwttoken" },
+  //auth: { token: "myjwttoken" },
 });
 
 function App() {
@@ -19,6 +19,8 @@ function App() {
 
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
+
+  const [chats, setChats] = useState([]);
 
   const [loggedIn, setLoggedIn] = useState(false);
 
@@ -55,9 +57,32 @@ function App() {
       // setMessages([...messages, message])
       // Good:
       console.table({ message });
-      setMessages((messages) => [...messages, message]);
+
+      if (!!message.recipient) {
+        const chat = chats.findIndex((c) => c.recipient === message.sender);
+
+        console.table({ chat });
+
+        if (chat === -1) {
+          setChats((chats) => [
+            ...chats,
+            {
+              recipient: message.sender,
+              messages: [message],
+            },
+          ]);
+        } else {
+          const newChats = [...chats];
+          newChats[chat].messages.push(message);
+          setChats(newChats);
+        }
+      } else {
+        setMessages((messages) => [...messages, message]);
+      }
     });
   }, []);
+
+  console.log({ chats });
 
   useEffect(() => {
     fetchOnlineUsers().then(setUsers);
@@ -73,6 +98,7 @@ function App() {
     e.preventDefault();
     console.log("handleMessage", text);
     const message = {
+      recipient: userSelected?.socketId,
       text,
       timestamp: Date.now(),
       sender: {
@@ -141,6 +167,7 @@ function App() {
             showChatWindow={showChatWindow}
             setShowChatWindow={setShowChatWindow}
             userSelected={userSelected}
+            chat={chats.find((c) => c.recipient.id === userSelected.socketId)}
           ></ChatWindow>
         </Col>
       </Row>

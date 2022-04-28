@@ -3,6 +3,7 @@ import { Card } from "react-bootstrap";
 import { AiFillCloseCircle } from "react-icons/ai";
 
 function ChatWindow(props) {
+  console.log(props.chat);
   return (
     props.showChatWindow && (
       <Card className="align-self-end" style={{ width: "18rem" }}>
